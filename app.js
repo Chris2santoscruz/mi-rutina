@@ -1,4 +1,4 @@
-// Asegúrate de que esta sea la URL de tu implementación de Apps Script:
+// REEMPLAZA AQUÍ CON TU URL DE GOOGLE APPS SCRIPT (la que termina en /exec):
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN-IdtR-Rs3lmsl_O-rJc3_sbj5GzoG2_qUe8eMpBBBy-PfgprAn253YXsHnvCgNb5/exec";
 
 const rutinaData = {
@@ -36,14 +36,35 @@ const rutinaData = {
   ]
 };
 
+// Usuario activo en este dispositivo
+let usuarioActual = localStorage.getItem("gym_usuario_activo") || "";
+
 function inicializarApp() {
+  const modal = document.getElementById("modal-usuario");
+  const display = document.getElementById("nombre-usuario-display");
+
+  if (!usuarioActual) {
+    if (modal) modal.style.display = "flex";
+  } else {
+    if (display) display.innerText = usuarioActual;
+  }
+
+  renderizarTarjetas();
+
+  if (usuarioActual) {
+    sincronizarPesosNube();
+  }
+}
+
+function renderizarTarjetas() {
   for (const dia in rutinaData) {
     const contenedor = document.getElementById("lista-" + dia);
     if (!contenedor) continue;
     contenedor.innerHTML = "";
 
     rutinaData[dia].forEach(ex => {
-      const pesoLocal = localStorage.getItem("peso_" + ex.id) || "";
+      const claveLocal = `peso_${usuarioActual.toLowerCase()}_${ex.id}`;
+      const pesoLocal = usuarioActual ? (localStorage.getItem(claveLocal) || "") : "";
       const tagClass = "tag-" + ex.musculo.toLowerCase().replace(/[\s/]/g, "-");
 
       const card = document.createElement("div");
@@ -72,42 +93,81 @@ function inicializarApp() {
       contenedor.appendChild(card);
     });
   }
+}
 
-  // Traer pesos de Google Sheets
+// Confirmar nombre de usuario en el modal
+function confirmarUsuario() {
+  const inputEl = document.getElementById("input-nuevo-usuario");
+  const nombre = inputEl ? inputEl.value.trim() : "";
+
+  if (!nombre) {
+    alert("Por favor escribe tu nombre o apodo.");
+    return;
+  }
+
+  usuarioActual = nombre;
+  localStorage.setItem("gym_usuario_activo", usuarioActual);
+
+  const display = document.getElementById("nombre-usuario-display");
+  if (display) display.innerText = usuarioActual;
+
+  const modal = document.getElementById("modal-usuario");
+  if (modal) modal.style.display = "none";
+
+  renderizarTarjetas();
   sincronizarPesosNube();
 }
 
-// Función global para recibir los pesos vía JSONP
+// Abrir modal para cambiar de usuario
+function cambiarUsuario() {
+  const inputEl = document.getElementById("input-nuevo-usuario");
+  const modal = document.getElementById("modal-usuario");
+  if (inputEl) inputEl.value = usuarioActual;
+  if (modal) modal.style.display = "flex";
+}
+
+// Callback global que recibe los pesos del usuario vía JSONP desde Google Sheets
 window.recibirPesosDesdeNube = function(pesosRemotos) {
+  if (!usuarioActual || !pesosRemotos) return;
+
   for (const id in pesosRemotos) {
     const peso = pesosRemotos[id];
-    localStorage.setItem("peso_" + id, peso);
+    const claveLocal = `peso_${usuarioActual.toLowerCase()}_${id}`;
+    localStorage.setItem(claveLocal, peso);
+
     const input = document.getElementById("input-" + id);
     if (input) input.value = peso;
   }
 };
 
+// Solicitar pesos del usuario activo a Google Sheets
 function sincronizarPesosNube() {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TU_URL")) return;
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI") || !usuarioActual) return;
 
-  // Usa JSONP insertando un script dinámico (evita bloqueos de CORS entre dominios)
   const script = document.createElement("script");
-  script.src = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes("?") ? "&" : "?") + "callback=recibirPesosDesdeNube&t=" + new Date().getTime();
+  script.src = `${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}&callback=recibirPesosDesdeNube&t=${new Date().getTime()}`;
   document.body.appendChild(script);
 }
 
+// Guardar peso tanto en local como en la pestaña "Pesos" de Google Sheets
 function guardarPeso(id, valor) {
-  const limpio = valor.trim();
-  localStorage.setItem("peso_" + id, limpio);
+  if (!usuarioActual) {
+    cambiarUsuario();
+    return;
+  }
 
-  // Guarda en la pestaña "Pesos" de Google Sheets
-  if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_URL")) {
+  const limpio = valor.trim();
+  const claveLocal = `peso_${usuarioActual.toLowerCase()}_${id}`;
+  localStorage.setItem(claveLocal, limpio);
+
+  if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("PEGA_AQUI")) {
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
         tipo: "guardar_peso",
+        usuario: usuarioActual,
         id: id,
         peso: limpio
       })
@@ -115,15 +175,24 @@ function guardarPeso(id, valor) {
   }
 }
 
+// Cambiar entre pestañas Día 1, Día 2 y Día 3
 function cambiarDia(diaId) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
   document.getElementById(diaId).classList.add("active");
-  event.target.classList.add("active");
+  if (event && event.target) {
+    event.target.classList.add("active");
+  }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// Registrar sesión de entrenamiento finalizada en la pestaña "Registro"
 function registrarEntrenamiento(nombreRutina, statusId) {
+  if (!usuarioActual) {
+    cambiarUsuario();
+    return;
+  }
+
   const statusEl = document.getElementById(statusId);
   statusEl.style.color = "#38bdf8";
   statusEl.innerText = "Registrando en Google Drive...";
@@ -133,12 +202,19 @@ function registrarEntrenamiento(nombreRutina, statusId) {
   const diaSemana = diasSemana[ahora.getDay()];
   const fecha = ahora.toISOString().split("T")[0];
 
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI")) {
+    statusEl.style.color = "#fbbf24";
+    statusEl.innerText = "Error: Falta pegar la URL de Google Apps Script en app.js";
+    return;
+  }
+
   fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({
       tipo: "completar_sesion",
+      usuario: usuarioActual,
       fecha: fecha,
       diaSemana: diaSemana,
       rutina: nombreRutina,
@@ -146,7 +222,7 @@ function registrarEntrenamiento(nombreRutina, statusId) {
     })
   }).then(() => {
     statusEl.style.color = "#10b981";
-    statusEl.innerText = `✓ ¡Excelente! Guardado en Drive (${diaSemana} ${fecha}).`;
+    statusEl.innerText = `✓ ¡Excelente ${usuarioActual}! Guardado en Drive (${diaSemana} ${fecha}).`;
   }).catch(() => {
     statusEl.style.color = "#ef4444";
     statusEl.innerText = "Error al conectar con Drive.";
