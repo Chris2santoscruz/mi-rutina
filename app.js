@@ -1,5 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN-IdtR-Rs3lmsl_O-rJc3_sbj5GzoG2_qUe8eMpBBBy-PfgprAn253YXsHnvCgNb5/exec";
-
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwSmi4qPcFaA2yKvK8AMq6PrhxvgfdTEg1y8RLotrR4QlhMWj9f_8cRFpqygs4OhUP/exec"
 const rutinaData = {
   dia1: [
     { id: "p_plano", musculo: "Pecho", nombre: "Press Pecho Plano", series: "3-4 series x 8-10 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=press+de+banca+plano+mancuernas+tecnica" },
