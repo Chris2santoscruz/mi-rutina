@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mi Rutina</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <h1>MI ENTRENAMIENTO</h1>
+  </header>
+
+  <div class="container">
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="cambiarDia('dia1')">DÍA 1</button>
+      <button class="tab-btn" onclick="cambiarDia('dia2')">DÍA 2</button>
+      <button class="tab-btn" onclick="cambiarDia('dia3')">DÍA 3</button>
+    </nav>
+
+    <!-- DÍA 1 -->
+    <section id="dia1" class="tab-content active">
+      <div class="day-header">
+        <h2>Pecho, Hombro, Trapecio y Bíceps</h2>
+      </div>
+      <div id="lista-dia1"></div>
+      <div class="finish-wrapper">
+        <button class="btn-complete" onclick="registrarEntrenamiento('Día 1: Pecho, Hombros y Bíceps', 'status-dia1')">
+          ✓ COMPLETAR DÍA 1 (REGISTRAR)
+        </button>
+        <div id="status-dia1" class="status-log"></div>
+      </div>
+    </section>
+
+    <!-- DÍA 2 -->
+    <section id="dia2" class="tab-content">
+      <div class="day-header">
+        <h2>Piernas y Abdomen</h2>
+      </div>
+      <div id="lista-dia2"></div>
+      <div class="finish-wrapper">
+        <button class="btn-complete" onclick="registrarEntrenamiento('Día 2: Piernas y Abdomen', 'status-dia2')">
+          ✓ COMPLETAR DÍA 2 (REGISTRAR)
+        </button>
+        <div id="status-dia2" class="status-log"></div>
+      </div>
+    </section>
+
+    <!-- DÍA 3 -->
+    <section id="dia3" class="tab-content">
+      <div class="day-header">
+        <h2>Espalda, Tríceps y Posterior</h2>
+      </div>
+      <div id="lista-dia3"></div>
+      <div class="finish-wrapper">
+        <button class="btn-complete" onclick="registrarEntrenamiento('Día 3: Espalda y Tríceps', 'status-dia3')">
+          ✓ COMPLETAR DÍA 3 (REGISTRAR)
+        </button>
+        <div id="status-dia3" class="status-log"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
