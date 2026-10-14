@@ -1,5 +1,5 @@
 // REEMPLAZA ESTE TEXTO CON LA URL QUE COPIASTE DE APPS SCRIPT:
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyU7lEbp05dARsb989abophKbfXrE0F04Xm7J66Dt-Y-Tv8kcS1OdRzBbC-JayZsydU/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN-IdtR-Rs3lmsl_O-rJc3_sbj5GzoG2_qUe8eMpBBBy-PfgprAn253YXsHnvCgNb5/exec";
 
 const rutinaData = {
   dia1: [
