@@ -1,4 +1,4 @@
-// REEMPLAZA ESTE TEXTO CON LA URL QUE COPIASTE DE APPS SCRIPT:
+// Asegúrate de que esta sea la URL de tu implementación de Apps Script:
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN-IdtR-Rs3lmsl_O-rJc3_sbj5GzoG2_qUe8eMpBBBy-PfgprAn253YXsHnvCgNb5/exec";
 
 const rutinaData = {
@@ -43,7 +43,7 @@ function inicializarApp() {
     contenedor.innerHTML = "";
 
     rutinaData[dia].forEach(ex => {
-      const pesoGuardado = localStorage.getItem("peso_" + ex.id) || "";
+      const pesoLocal = localStorage.getItem("peso_" + ex.id) || "";
       const tagClass = "tag-" + ex.musculo.toLowerCase().replace(/[\s/]/g, "-");
 
       const card = document.createElement("div");
@@ -61,7 +61,7 @@ function inicializarApp() {
           <div class="weight-control">
             <label for="input-${ex.id}">Peso:</label>
             <input id="input-${ex.id}" class="weight-input" type="text" inputmode="decimal" 
-                   value="${pesoGuardado}" placeholder="0 kg" 
+                   value="${pesoLocal}" placeholder="0 kg" 
                    onchange="guardarPeso('${ex.id}', this.value)">
           </div>
           <a href="${ex.video}" target="_blank" rel="noopener noreferrer" class="video-btn">
@@ -72,10 +72,47 @@ function inicializarApp() {
       contenedor.appendChild(card);
     });
   }
+
+  // Traer pesos de Google Sheets
+  sincronizarPesosNube();
+}
+
+// Función global para recibir los pesos vía JSONP
+window.recibirPesosDesdeNube = function(pesosRemotos) {
+  for (const id in pesosRemotos) {
+    const peso = pesosRemotos[id];
+    localStorage.setItem("peso_" + id, peso);
+    const input = document.getElementById("input-" + id);
+    if (input) input.value = peso;
+  }
+};
+
+function sincronizarPesosNube() {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TU_URL")) return;
+
+  // Usa JSONP insertando un script dinámico (evita bloqueos de CORS entre dominios)
+  const script = document.createElement("script");
+  script.src = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes("?") ? "&" : "?") + "callback=recibirPesosDesdeNube&t=" + new Date().getTime();
+  document.body.appendChild(script);
 }
 
 function guardarPeso(id, valor) {
-  localStorage.setItem("peso_" + id, valor.trim());
+  const limpio = valor.trim();
+  localStorage.setItem("peso_" + id, limpio);
+
+  // Guarda en la pestaña "Pesos" de Google Sheets
+  if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_URL")) {
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tipo: "guardar_peso",
+        id: id,
+        peso: limpio
+      })
+    });
+  }
 }
 
 function cambiarDia(diaId) {
@@ -101,6 +138,7 @@ function registrarEntrenamiento(nombreRutina, statusId) {
     mode: "no-cors",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      tipo: "completar_sesion",
       fecha: fecha,
       diaSemana: diaSemana,
       rutina: nombreRutina,
