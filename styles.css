@@ -1,5 +1,5 @@
-// Asegúrate de que esta sea la URL de tu implementación de Apps Script:
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5tF-vX99D0yXG9uB8R2b6mXo-tu-url/exec"; 
+// REEMPLAZA AQUÍ CON TU URL DE GOOGLE APPS SCRIPT (la que termina en /exec):
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5tF-vX99D0yXG9uB8R2b6mXo-tu-url/exec";
 
 const rutinaData = {
   dia1: [
@@ -36,14 +36,35 @@ const rutinaData = {
   ]
 };
 
+// Usuario activo en este dispositivo
+let usuarioActual = localStorage.getItem("gym_usuario_activo") || "";
+
 function inicializarApp() {
+  const modal = document.getElementById("modal-usuario");
+  const display = document.getElementById("nombre-usuario-display");
+
+  if (!usuarioActual) {
+    if (modal) modal.style.display = "flex";
+  } else {
+    if (display) display.innerText = usuarioActual;
+  }
+
+  renderizarTarjetas();
+
+  if (usuarioActual) {
+    sincronizarPesosNube();
+  }
+}
+
+function renderizarTarjetas() {
   for (const dia in rutinaData) {
     const contenedor = document.getElementById("lista-" + dia);
     if (!contenedor) continue;
     contenedor.innerHTML = "";
 
     rutinaData[dia].forEach(ex => {
-      const pesoLocal = localStorage.getItem("peso_" + ex.id) || "";
+      const claveLocal = `peso_${usuarioActual.toLowerCase()}_${ex.id}`;
+      const pesoLocal = usuarioActual ? (localStorage.getItem(claveLocal) || "") : "";
       const tagClass = "tag-" + ex.musculo.toLowerCase().replace(/[\s/]/g, "-");
 
       const card = document.createElement("div");
@@ -72,161 +93,56 @@ function inicializarApp() {
       contenedor.appendChild(card);
     });
   }
+}
 
-  // Traer pesos de Google Sheets
+// Confirmar nombre de usuario en el modal
+function confirmarUsuario() {
+  const inputEl = document.getElementById("input-nuevo-usuario");
+  const nombre = inputEl ? inputEl.value.trim() : "";
+
+  if (!nombre) {
+    alert("Por favor escribe tu nombre o apodo.");
+    return;
+  }
+
+  usuarioActual = nombre;
+  localStorage.setItem("gym_usuario_activo", usuarioActual);
+
+  const display = document.getElementById("nombre-usuario-display");
+  if (display) display.innerText = usuarioActual;
+
+  const modal = document.getElementById("modal-usuario");
+  if (modal) modal.style.display = "none";
+
+  renderizarTarjetas();
   sincronizarPesosNube();
 }
 
-// Callback global JSONP
+// Abrir modal para cambiar de usuario
+function cambiarUsuario() {
+  const inputEl = document.getElementById("input-nuevo-usuario");
+  const modal = document.getElementById("modal-usuario");
+  if (inputEl) inputEl.value = usuarioActual;
+  if (modal) modal.style.display = "flex";
+}
+
+// Callback global que recibe los pesos del usuario vía JSONP desde Google Sheets
 window.recibirPesosDesdeNube = function(pesosRemotos) {
+  if (!usuarioActual || !pesosRemotos) return;
+
   for (const id in pesosRemotos) {
     const peso = pesosRemotos[id];
-    localStorage.setItem("peso_" + id, peso);
+    const claveLocal = `peso_${usuarioActual.toLowerCase()}_${id}`;
+    localStorage.setItem(claveLocal, peso);
+
     const input = document.getElementById("input-" + id);
     if (input) input.value = peso;
   }
 };
 
+// Solicitar pesos del usuario activo a Google Sheets
 function sincronizarPesosNube() {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("tu-url")) return;
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI") || !usuarioActual) return;
 
   const script = document.createElement("script");
-  script.src = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes("?") ? "&" : "?") + "callback=recibirPesosDesdeNube&t=" + new Date().getTime();
-  document.body.appendChild(script);
-}
-
-function guardarPeso(id, valor) {
-  const limpio = valor.trim();
-  localStorage.setItem("peso_" + id, limpio);
-
-  // Enviar a Google Sheets
-  if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("tu-url")) {
-    fetch(GOOGLE_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        tipo: "guardar_peso",
-        id: id,
-        peso: limpio
-      })
-    });
-  }
-}
-
-function cambiarDia(diaId) {
-  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
-  document.getElementById(diaId).classList.add("active");
-  event.target.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function registrarEntrenamiento(nombreRutina, statusId) {
-  const statusEl = document.getElementById(statusId);
-  statusEl.style.color = "#38bdf8";
-  statusEl.innerText = "Registrando en Google Drive...";
-
-  const ahora = new Date();
-  const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-  const diaSemana = diasSemana[ahora.getDay()];
-  const fecha = ahora.toISOString().split("T")[0];
-
-  fetch(GOOGLE_SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({
-      tipo: "completar_sesion",
-      fecha: fecha,
-      diaSemana: diaSemana,
-      rutina: nombreRutina,
-      notas: "Completado"
-    })
-  }).then(() => {
-    statusEl.style.color = "#10b981";
-    statusEl.innerText = `✓ ¡Excelente! Guardado en Drive (${diaSemana} ${fecha}).`;
-  }).catch(() => {
-    statusEl.style.color = "#ef4444";
-    statusEl.innerText = "Error al conectar con Drive.";
-  });
-
-/* Estilos de Usuario y Modal */
-.header-content {
-  max-width: 600px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.user-badge {
-  background: #1e293b;
-  color: #38bdf8;
-  border: 1px solid var(--border);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-  padding: 20px;
-}
-
-.modal-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
-  max-width: 360px;
-  width: 100%;
-  text-align: center;
-}
-
-.modal-box h2 {
-  margin-bottom: 8px;
-  color: #fff;
-}
-
-.modal-box p {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-}
-
-.modal-box input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: #090e1a;
-  color: #fff;
-  font-size: 1rem;
-  text-align: center;
-  margin-bottom: 14px;
-}
-
-.modal-box button {
-  width: 100%;
-  padding: 12px;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-}
-
-document.addEventListener("DOMContentLoaded", inicializarApp);
+  script.src = `${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}&callback=recibirPesosDesdeNube
