@@ -238,7 +238,7 @@ header h1 {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
@@ -256,28 +256,42 @@ header h1 {
   text-align: center;
 }
 .modal-box h2 {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #fff;
 }
 .modal-box p {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin-bottom: 16px;
 }
+.input-group {
+  text-align: left;
+  margin-bottom: 12px;
+}
+.input-group label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
 .modal-box input {
   width: 100%;
-  padding: 12px;
+  padding: 11px 12px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: #090e1a;
   color: #fff;
   font-size: 1rem;
-  text-align: center;
-  margin-bottom: 14px;
+  outline: none;
+}
+.modal-box input:focus {
+  border-color: var(--primary);
 }
 .modal-box button {
   width: 100%;
   padding: 12px;
+  margin-top: 6px;
   background: var(--primary);
   color: #fff;
   border: none;
@@ -285,6 +299,17 @@ header h1 {
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
+}
+.btn-secondary {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border) !important;
+  margin-top: 8px !important;
+}
+.login-msg {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  min-height: 18px;
 }
 </style>
 </head>
@@ -301,10 +326,22 @@ header h1 {
 
 <div id="modal-usuario" class="modal-overlay" style="display: none;">
   <div class="modal-box">
-    <h2>¡Bienvenido/a!</h2>
-    <p>Ingresa tu nombre o apodo para cargar y guardar tus propios pesos y entrenamientos:</p>
-    <input type="text" id="input-nuevo-usuario" placeholder="Ej: Christian" autocomplete="off">
-    <button onclick="confirmarUsuario()">Entrar a mi rutina</button>
+    <h2>Acceso a tu Perfil</h2>
+    <p>Ingresa tu usuario y contraseña:</p>
+    
+    <div class="input-group">
+      <label>Usuario:</label>
+      <input type="text" id="input-user" placeholder="Ej: christian_fit" autocomplete="off">
+    </div>
+
+    <div class="input-group">
+      <label>Contraseña:</label>
+      <input type="password" id="input-pass" placeholder="••••••••" autocomplete="off">
+    </div>
+
+    <button id="btn-login" onclick="procesarAcceso('login')">Iniciar Sesión</button>
+    <button id="btn-reg" class="btn-secondary" onclick="procesarAcceso('registro')">Registrarme como Nuevo</button>
+    <div id="login-status" class="login-msg"></div>
   </div>
 </div>
 
@@ -356,7 +393,6 @@ header h1 {
 </div>
 
 <script>
-// PEGA AQUÍ LA NUEVA URL QUE TE DIO LA "NUEVA IMPLEMENTACIÓN" DEL PASO 1:
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwSmi4qPcFaA2yKvK8AMq6PrhxvgfdTEg1y8RLotrR4QlhMWj9f_8cRFpqygs4OhUP/exec";
 
 const rutinaData = {
@@ -394,7 +430,7 @@ const rutinaData = {
   ]
 };
 
-let usuarioActual = localStorage.getItem("gym_usuario_activo") || "";
+let usuarioActual = localStorage.getItem("gym_usuario") || "";
 
 function inicializarApp() {
   const modal = document.getElementById("modal-usuario");
@@ -420,7 +456,7 @@ function renderizarTarjetas() {
     contenedor.innerHTML = "";
 
     rutinaData[dia].forEach(ex => {
-      const claveLocal = `peso_${usuarioActual.toLowerCase()}_${ex.id}`;
+      const claveLocal = `peso_${usuarioActual}_${ex.id}`;
       const pesoLocal = usuarioActual ? (localStorage.getItem(claveLocal) || "") : "";
       const tagClass = "tag-" + ex.musculo.toLowerCase().replace(/[\s/]/g, "-");
 
@@ -450,33 +486,56 @@ function renderizarTarjetas() {
   }
 }
 
-function confirmarUsuario() {
-  const inputEl = document.getElementById("input-nuevo-usuario");
-  const nombre = inputEl ? inputEl.value.trim() : "";
-
-  if (!nombre) {
-    alert("Por favor escribe tu nombre o apodo.");
+window.respuestaAuth = function(res) {
+  const statusEl = document.getElementById("login-status");
+  if (!res || res.status === "error") {
+    if (statusEl) {
+      statusEl.style.color = "#ef4444";
+      statusEl.innerText = res ? res.mensaje : "Error de conexión.";
+    }
     return;
   }
 
-  usuarioActual = nombre;
-  localStorage.setItem("gym_usuario_activo", usuarioActual);
+  usuarioActual = res.usuario;
+  localStorage.setItem("gym_usuario", usuarioActual);
 
-  const display = document.getElementById("nombre-usuario-display");
-  if (display) display.innerText = usuarioActual;
+  document.getElementById("nombre-usuario-display").innerText = usuarioActual;
+  document.getElementById("modal-usuario").style.display = "none";
+  if (statusEl) statusEl.innerText = "";
 
-  const modal = document.getElementById("modal-usuario");
-  if (modal) modal.style.display = "none";
-
+  if (res.pesos) {
+    for (const id in res.pesos) {
+      localStorage.setItem(`peso_${usuarioActual}_${id}`, res.pesos[id]);
+    }
+  }
   renderizarTarjetas();
   sincronizarPesosNube();
+};
+
+function procesarAcceso(accion) {
+  const user = document.getElementById("input-user").value.toLowerCase().trim();
+  const pass = document.getElementById("input-pass").value.trim();
+  const statusEl = document.getElementById("login-status");
+
+  if (!user || !pass) {
+    statusEl.style.color = "#fbbf24";
+    statusEl.innerText = "Ingresa usuario y contraseña.";
+    return;
+  }
+
+  statusEl.style.color = "#38bdf8";
+  statusEl.innerText = accion === 'registro' ? "Registrando usuario..." : "Verificando acceso...";
+
+  const script = document.createElement("script");
+  script.src = `${GOOGLE_SCRIPT_URL}?accion=${accion}&usuario=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&callback=respuestaAuth&t=${new Date().getTime()}`;
+  document.body.appendChild(script);
 }
 
 function cambiarUsuario() {
-  const inputEl = document.getElementById("input-nuevo-usuario");
-  const modal = document.getElementById("modal-usuario");
-  if (inputEl) inputEl.value = usuarioActual;
-  if (modal) modal.style.display = "flex";
+  document.getElementById("input-user").value = usuarioActual;
+  document.getElementById("input-pass").value = "";
+  document.getElementById("login-status").innerText = "";
+  document.getElementById("modal-usuario").style.display = "flex";
 }
 
 window.recibirPesosDesdeNube = function(pesosRemotos) {
@@ -484,9 +543,7 @@ window.recibirPesosDesdeNube = function(pesosRemotos) {
 
   for (const id in pesosRemotos) {
     const peso = pesosRemotos[id];
-    const claveLocal = `peso_${usuarioActual.toLowerCase()}_${id}`;
-    localStorage.setItem(claveLocal, peso);
-
+    localStorage.setItem(`peso_${usuarioActual}_${id}`, peso);
     const input = document.getElementById("input-" + id);
     if (input) input.value = peso;
   }
@@ -507,8 +564,7 @@ function guardarPeso(id, valor) {
   }
 
   const limpio = valor.trim();
-  const claveLocal = `peso_${usuarioActual.toLowerCase()}_${id}`;
-  localStorage.setItem(claveLocal, limpio);
+  localStorage.setItem(`peso_${usuarioActual}_${id}`, limpio);
 
   if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("PEGA_AQUI")) {
     fetch(GOOGLE_SCRIPT_URL, {
@@ -558,7 +614,7 @@ function registrarEntrenamiento(nombreRutina, statusId) {
       fecha: fecha,
       diaSemana: diaSemana,
       rutina: nombreRutina,
-      notas: "Completado"
+      notas: "Completado (" + usuarioActual + ")"
     })
   }).then(() => {
     statusEl.style.color = "#10b981";
