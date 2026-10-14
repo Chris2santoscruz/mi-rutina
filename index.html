@@ -12,6 +12,7 @@
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --success: #10b981;
+  --danger: #ef4444;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --border: #24324f;
@@ -56,6 +57,11 @@ header h1 {
   letter-spacing: 0.5px;
   font-weight: 700;
 }
+.user-info-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .user-badge {
   background: #1e293b;
   color: #38bdf8;
@@ -64,7 +70,19 @@ header h1 {
   border-radius: 20px;
   font-size: 0.82rem;
   font-weight: 700;
+}
+.btn-logout {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
+}
+.btn-logout:hover {
+  background: rgba(239, 68, 68, 0.3);
 }
 .container {
   max-width: 600px;
@@ -318,9 +336,10 @@ header h1 {
 <header>
   <div class="header-content">
     <h1>MI ENTRENAMIENTO</h1>
-    <button class="user-badge" onclick="cambiarUsuario()">
-      👤 <span id="nombre-usuario-display">Ingresar</span>
-    </button>
+    <div class="user-info-container">
+      <div class="user-badge">👤 <span id="nombre-usuario-display">Ingresar</span></div>
+      <button id="btn-logout" class="btn-logout" onclick="cerrarSesion()" style="display: none;">Salir</button>
+    </div>
   </div>
 </header>
 
@@ -435,11 +454,14 @@ let usuarioActual = localStorage.getItem("gym_usuario") || "";
 function inicializarApp() {
   const modal = document.getElementById("modal-usuario");
   const display = document.getElementById("nombre-usuario-display");
+  const btnLogout = document.getElementById("btn-logout");
 
   if (!usuarioActual) {
     if (modal) modal.style.display = "flex";
+    if (btnLogout) btnLogout.style.display = "none";
   } else {
     if (display) display.innerText = usuarioActual;
+    if (btnLogout) btnLogout.style.display = "inline-block";
   }
 
   renderizarTarjetas();
@@ -496,10 +518,11 @@ window.respuestaAuth = function(res) {
     return;
   }
 
-  usuarioActual = res.usuario;
+  usuarioActual = res.usuario || document.getElementById("input-user").value.toLowerCase().trim();
   localStorage.setItem("gym_usuario", usuarioActual);
 
   document.getElementById("nombre-usuario-display").innerText = usuarioActual;
+  document.getElementById("btn-logout").style.display = "inline-block";
   document.getElementById("modal-usuario").style.display = "none";
   if (statusEl) statusEl.innerText = "";
 
@@ -531,10 +554,13 @@ function procesarAcceso(accion) {
   document.body.appendChild(script);
 }
 
-function cambiarUsuario() {
-  document.getElementById("input-user").value = usuarioActual;
+function cerrarSesion() {
+  localStorage.removeItem("gym_usuario");
+  usuarioActual = "";
+  document.getElementById("input-user").value = "";
   document.getElementById("input-pass").value = "";
   document.getElementById("login-status").innerText = "";
+  document.getElementById("btn-logout").style.display = "none";
   document.getElementById("modal-usuario").style.display = "flex";
 }
 
@@ -558,8 +584,9 @@ function sincronizarPesosNube() {
 }
 
 function guardarPeso(id, valor) {
+  usuarioActual = localStorage.getItem("gym_usuario") || usuarioActual;
   if (!usuarioActual) {
-    cambiarUsuario();
+    cerrarSesion();
     return;
   }
 
@@ -590,8 +617,10 @@ function cambiarDia(diaId, btnEl) {
 }
 
 function registrarEntrenamiento(nombreRutina, statusId) {
+  usuarioActual = localStorage.getItem("gym_usuario") || usuarioActual;
+
   if (!usuarioActual) {
-    cambiarUsuario();
+    cerrarSesion();
     return;
   }
 
