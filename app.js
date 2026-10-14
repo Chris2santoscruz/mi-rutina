@@ -1,4 +1,3 @@
-// REEMPLAZA AQUÍ CON TU URL DE GOOGLE APPS SCRIPT (la que termina en /exec):
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN-IdtR-Rs3lmsl_O-rJc3_sbj5GzoG2_qUe8eMpBBBy-PfgprAn253YXsHnvCgNb5/exec";
 
 const rutinaData = {
@@ -36,7 +35,6 @@ const rutinaData = {
   ]
 };
 
-// Usuario activo en este dispositivo
 let usuarioActual = localStorage.getItem("gym_usuario_activo") || "";
 
 function inicializarApp() {
@@ -81,9 +79,7 @@ function renderizarTarjetas() {
         <div class="card-bottom">
           <div class="weight-control">
             <label for="input-${ex.id}">Peso:</label>
-            <input id="input-${ex.id}" class="weight-input" type="text" inputmode="decimal" 
-                   value="${pesoLocal}" placeholder="0 kg" 
-                   onchange="guardarPeso('${ex.id}', this.value)">
+            <input id="input-${ex.id}" class="weight-input" type="text" inputmode="decimal" value="${pesoLocal}" placeholder="0 kg" onchange="guardarPeso('${ex.id}', this.value)">
           </div>
           <a href="${ex.video}" target="_blank" rel="noopener noreferrer" class="video-btn">
             ▶ Ver video
@@ -95,7 +91,6 @@ function renderizarTarjetas() {
   }
 }
 
-// Confirmar nombre de usuario en el modal
 function confirmarUsuario() {
   const inputEl = document.getElementById("input-nuevo-usuario");
   const nombre = inputEl ? inputEl.value.trim() : "";
@@ -118,7 +113,6 @@ function confirmarUsuario() {
   sincronizarPesosNube();
 }
 
-// Abrir modal para cambiar de usuario
 function cambiarUsuario() {
   const inputEl = document.getElementById("input-nuevo-usuario");
   const modal = document.getElementById("modal-usuario");
@@ -126,7 +120,6 @@ function cambiarUsuario() {
   if (modal) modal.style.display = "flex";
 }
 
-// Callback global que recibe los pesos del usuario vía JSONP desde Google Sheets
 window.recibirPesosDesdeNube = function(pesosRemotos) {
   if (!usuarioActual || !pesosRemotos) return;
 
@@ -140,16 +133,14 @@ window.recibirPesosDesdeNube = function(pesosRemotos) {
   }
 };
 
-// Solicitar pesos del usuario activo a Google Sheets
 function sincronizarPesosNube() {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI") || !usuarioActual) return;
+  if (!GOOGLE_SCRIPT_URL || !usuarioActual) return;
 
   const script = document.createElement("script");
   script.src = `${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}&callback=recibirPesosDesdeNube&t=${new Date().getTime()}`;
   document.body.appendChild(script);
 }
 
-// Guardar peso tanto en local como en la pestaña "Pesos" de Google Sheets
 function guardarPeso(id, valor) {
   if (!usuarioActual) {
     cambiarUsuario();
@@ -160,7 +151,7 @@ function guardarPeso(id, valor) {
   const claveLocal = `peso_${usuarioActual.toLowerCase()}_${id}`;
   localStorage.setItem(claveLocal, limpio);
 
-  if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("PEGA_AQUI")) {
+  if (GOOGLE_SCRIPT_URL) {
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
@@ -175,7 +166,6 @@ function guardarPeso(id, valor) {
   }
 }
 
-// Cambiar entre pestañas Día 1, Día 2 y Día 3
 function cambiarDia(diaId) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
@@ -186,7 +176,6 @@ function cambiarDia(diaId) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// Registrar sesión de entrenamiento finalizada en la pestaña "Registro"
 function registrarEntrenamiento(nombreRutina, statusId) {
   if (!usuarioActual) {
     cambiarUsuario();
@@ -201,12 +190,6 @@ function registrarEntrenamiento(nombreRutina, statusId) {
   const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
   const diaSemana = diasSemana[ahora.getDay()];
   const fecha = ahora.toISOString().split("T")[0];
-
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI")) {
-    statusEl.style.color = "#fbbf24";
-    statusEl.innerText = "Error: Falta pegar la URL de Google Apps Script en app.js";
-    return;
-  }
 
   fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
