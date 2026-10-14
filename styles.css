@@ -1,148 +1,320 @@
-// REEMPLAZA AQUÍ CON TU URL DE GOOGLE APPS SCRIPT (la que termina en /exec):
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5tF-vX99D0yXG9uB8R2b6mXo-tu-url/exec";
-
-const rutinaData = {
-  dia1: [
-    { id: "p_plano", musculo: "Pecho", nombre: "Press Pecho Plano", series: "3-4 series x 8-10 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=press+de+banca+plano+mancuernas+tecnica" },
-    { id: "p_inclinado", musculo: "Pecho", nombre: "Press Inclinado Mancuernas", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200", video: "https://www.youtube.com/results?search_query=press+inclinado+con+mancuernas+tecnica" },
-    { id: "voador", musculo: "Pecho", nombre: "Voador Direto (Máquina)", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=peck+deck+machine+fly+tecnica" },
-    { id: "press_militar", musculo: "Hombro", nombre: "Press Militar Sentado", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=press+militar+mancuernas+sentado" },
-    { id: "elev_lat", musculo: "Hombro", nombre: "Elevaciones Laterales", series: "3-4 series x 12-15 reps", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200", video: "https://www.youtube.com/results?search_query=elevaciones+laterales+mancuerna+tecnica" },
-    { id: "elev_front", musculo: "Hombro", nombre: "Elevaciones Frontales", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200", video: "https://www.youtube.com/results?search_query=elevaciones+frontales+mancuerna" },
-    { id: "shrugs", musculo: "Trapecio", nombre: "Encogimientos (Shrugs)", series: "3-4 series x 12-15 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=encogimiento+de+hombros+mancuernas+shrugs" },
-    { id: "biceps_w", musculo: "Bíceps", nombre: "Curl Barra W", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=curl+biceps+barra+w+tecnica" },
-    { id: "martelo", musculo: "Bíceps", nombre: "Rosca Martillo", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=curl+martillo+mancuernas" },
-    { id: "plancha", musculo: "Core", nombre: "Plancha Frontal", series: "3-4 series x 30-45s", img: "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=200", video: "https://www.youtube.com/results?search_query=plancha+abdominal+tecnica" }
-  ],
-  dia2: [
-    { id: "goblet", musculo: "Pierna", nombre: "Goblet Squat (Globo)", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200", video: "https://www.youtube.com/results?search_query=goblet+squat+tecnica" },
-    { id: "prensa", musculo: "Pierna", nombre: "Prensa Horizontal", series: "3-4 series x 10-12 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=prensa+horizontal+piernas" },
-    { id: "extensora", musculo: "Cuádriceps", nombre: "Cadeira Extensora", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=sillon+cuadriceps+extensora" },
-    { id: "flexora", musculo: "Isquios", nombre: "Cadeira Flexora", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=camilla+femoral+flexora" },
-    { id: "adutora", musculo: "Aductores", nombre: "Cadeira Adutora", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=maquina+aductora" },
-    { id: "abdutora", musculo: "Abductores", nombre: "Cadeira Abdutora", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=maquina+abductora" },
-    { id: "pelvica", musculo: "Glúteo", nombre: "Elevação Pélvica", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=200", video: "https://www.youtube.com/results?search_query=puente+de+gluteo+suelo" },
-    { id: "panto_prensa", musculo: "Gemelos", nombre: "Pantorrilla en Prensa", series: "3-4 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=pantorrilla+en+prensa" },
-    { id: "abd_reto", musculo: "Abdomen", nombre: "Abdominal Reto", series: "4 series x 15 reps", img: "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=200", video: "https://www.youtube.com/results?search_query=crunch+abdominal+suelo" }
-  ],
-  dia3: [
-    { id: "puxada", musculo: "Espalda", nombre: "Puxada Anatômica", series: "3-4 series x 10-12 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=jalon+al+pecho+polea+tecnica" },
-    { id: "serrote", musculo: "Espalda", nombre: "Serrote Mancuerna", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=remo+con+mancuerna+serrote" },
-    { id: "remo_sentado", musculo: "Espalda", nombre: "Remo Barra Anatómica", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=remo+sentado+en+polea+baja" },
-    { id: "pullover_polea", musculo: "Espalda", nombre: "Pullover Polea Alta", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=pullover+en+polea+alta+dorsal" },
-    { id: "crucifijo_inv", musculo: "Deltoides Post", nombre: "Crucifijo Inverso", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200", video: "https://www.youtube.com/results?search_query=pajaros+con+mancuernas+deltoides+posterior" },
-    { id: "triceps_corda", musculo: "Tríceps", nombre: "Tríceps Corda Polea", series: "3-4 series x 12-15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=extension+triceps+cuerda+polea" },
-    { id: "triceps_frances", musculo: "Tríceps", nombre: "Tríceps Francés", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=press+frances+triceps+mancuerna" }
-  ]
-};
-
-// Usuario activo en este dispositivo
-let usuarioActual = localStorage.getItem("gym_usuario_activo") || "";
-
-function inicializarApp() {
-  const modal = document.getElementById("modal-usuario");
-  const display = document.getElementById("nombre-usuario-display");
-
-  if (!usuarioActual) {
-    if (modal) modal.style.display = "flex";
-  } else {
-    if (display) display.innerText = usuarioActual;
-  }
-
-  renderizarTarjetas();
-
-  if (usuarioActual) {
-    sincronizarPesosNube();
-  }
+:root {
+  --bg-main: #0b1120;
+  --bg-card: #151e32;
+  --bg-card-hover: #1b2640;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --success: #10b981;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: #24324f;
+  
+  --badge-pecho: #2563eb;
+  --badge-hombro: #8b5cf6;
+  --badge-biceps: #059669;
+  --badge-pierna: #ea580c;
+  --badge-espalda: #0284c7;
+  --badge-triceps: #d97706;
+  --badge-core: #64748b;
 }
 
-function renderizarTarjetas() {
-  for (const dia in rutinaData) {
-    const contenedor = document.getElementById("lista-" + dia);
-    if (!contenedor) continue;
-    contenedor.innerHTML = "";
-
-    rutinaData[dia].forEach(ex => {
-      const claveLocal = `peso_${usuarioActual.toLowerCase()}_${ex.id}`;
-      const pesoLocal = usuarioActual ? (localStorage.getItem(claveLocal) || "") : "";
-      const tagClass = "tag-" + ex.musculo.toLowerCase().replace(/[\s/]/g, "-");
-
-      const card = document.createElement("div");
-      card.className = "exercise-card";
-      card.innerHTML = `
-        <div class="card-top">
-          <img class="thumb" src="${ex.img}" alt="${ex.nombre}" loading="lazy">
-          <div class="info">
-            <span class="tag ${tagClass}">${ex.musculo}</span>
-            <h3>${ex.nombre}</h3>
-            <div class="scheme">${ex.series}</div>
-          </div>
-        </div>
-        <div class="card-bottom">
-          <div class="weight-control">
-            <label for="input-${ex.id}">Peso:</label>
-            <input id="input-${ex.id}" class="weight-input" type="text" inputmode="decimal" 
-                   value="${pesoLocal}" placeholder="0 kg" 
-                   onchange="guardarPeso('${ex.id}', this.value)">
-          </div>
-          <a href="${ex.video}" target="_blank" rel="noopener noreferrer" class="video-btn">
-            ▶ Ver video
-          </a>
-        </div>
-      `;
-      contenedor.appendChild(card);
-    });
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
-// Confirmar nombre de usuario en el modal
-function confirmarUsuario() {
-  const inputEl = document.getElementById("input-nuevo-usuario");
-  const nombre = inputEl ? inputEl.value.trim() : "";
-
-  if (!nombre) {
-    alert("Por favor escribe tu nombre o apodo.");
-    return;
-  }
-
-  usuarioActual = nombre;
-  localStorage.setItem("gym_usuario_activo", usuarioActual);
-
-  const display = document.getElementById("nombre-usuario-display");
-  if (display) display.innerText = usuarioActual;
-
-  const modal = document.getElementById("modal-usuario");
-  if (modal) modal.style.display = "none";
-
-  renderizarTarjetas();
-  sincronizarPesosNube();
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  padding-bottom: 70px;
 }
 
-// Abrir modal para cambiar de usuario
-function cambiarUsuario() {
-  const inputEl = document.getElementById("input-nuevo-usuario");
-  const modal = document.getElementById("modal-usuario");
-  if (inputEl) inputEl.value = usuarioActual;
-  if (modal) modal.style.display = "flex";
+header {
+  background: rgba(11, 17, 32, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-// Callback global que recibe los pesos del usuario vía JSONP desde Google Sheets
-window.recibirPesosDesdeNube = function(pesosRemotos) {
-  if (!usuarioActual || !pesosRemotos) return;
+.header-content {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-  for (const id in pesosRemotos) {
-    const peso = pesosRemotos[id];
-    const claveLocal = `peso_${usuarioActual.toLowerCase()}_${id}`;
-    localStorage.setItem(claveLocal, peso);
+header h1 {
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
 
-    const input = document.getElementById("input-" + id);
-    if (input) input.value = peso;
-  }
-};
+.user-badge {
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
 
-// Solicitar pesos del usuario activo a Google Sheets
-function sincronizarPesosNube() {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI") || !usuarioActual) return;
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
 
-  const script = document.createElement("script");
-  script.src = `${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}&callback=recibirPesosDesdeNube
+.nav-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 20px;
+  background: #11192d;
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.day-header {
+  margin-bottom: 16px;
+}
+
+.day-header h2 {
+  font-size: 1.1rem;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.exercise-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-top {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #0b1120;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  color: #ffffff;
+}
+
+.tag-pecho { background: var(--badge-pecho); }
+.tag-hombro { background: var(--badge-hombro); }
+.tag-bíceps, .tag-biceps { background: var(--badge-biceps); }
+.tag-pierna, .tag-cuádriceps, .tag-isquios, .tag-aductores, .tag-abductores, .tag-glúteo, .tag-gemelos { background: var(--badge-pierna); }
+.tag-espalda, .tag-deltoides-post { background: var(--badge-espalda); }
+.tag-tríceps { background: var(--badge-triceps); }
+.tag-core, .tag-trapecio, .tag-abdomen { background: var(--badge-core); }
+
+.info h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.scheme {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.weight-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.weight-input {
+  width: 70px;
+  padding: 6px 10px;
+  background: #090e1a;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: #34d399;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+
+.weight-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.video-btn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #38bdf8;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.finish-wrapper {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.btn-complete {
+  width: 100%;
+  padding: 16px;
+  background: var(--success);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.btn-complete:active {
+  transform: scale(0.98);
+}
+
+.status-log {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-height: 20px;
+}
+
+/* Modal de Usuario */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 20px;
+}
+
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+
+.modal-box h2 {
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.modal-box p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.modal-box input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #090e1a;
+  color: #fff;
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.modal-box button {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
