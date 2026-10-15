@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mi Rutina v4</title>
+<title>Mi Rutina v4.1</title>
 <style>
 :root {
 --bg-main: #0b1120;
@@ -650,7 +650,6 @@ if (guardada) {
 try { return JSON.parse(guardada); } catch (e) {}
 }
 }
-// Usuario nuevo arranca con 3 días totalmente vacíos para armar desde cero
 return { dia1: [], dia2: [], dia3: [] };
 }
 
@@ -715,14 +714,12 @@ diasKeys.forEach((diaKey, index) => {
 const numDia = index + 1;
 const isActive = diaKey === diaActivoActual;
 
-// Botón de pestaña
 const tabBtn = document.createElement("button");
 tabBtn.className = `tab-btn ${isActive ? "active" : ""}`;
 tabBtn.onclick = (e) => cambiarDia(diaKey, e.target);
 tabBtn.innerText = `DÍA ${numDia}`;
 navContainer.appendChild(tabBtn);
 
-// Contenido de la sección
 const section = document.createElement("section");
 section.id = diaKey;
 section.className = `tab-content ${isActive ? "active" : ""}`;
@@ -771,7 +768,6 @@ return;
 }
 if (confirm("¿Estás seguro de eliminar este día completo de tu rutina?")) {
 delete rutinaData[diaKey];
-// Reordenar las keys para que queden dia1, dia2...
 const nuevaRutina = {};
 Object.keys(rutinaData).forEach((k, idx) => {
 nuevaRutina["dia" + (idx + 1)] = rutinaData[k];
@@ -988,13 +984,21 @@ estadoBotonesAuth(true);
 statusEl.style.color = "#38bdf8";
 statusEl.innerText = accion === 'registro' ? "Registrando en Google Sheets..." : "Verificando usuario y clave...";
 
-fetch(`${GOOGLE_SCRIPT_URL}?accion=${accion}&usuario=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`)
-.then(response => response.json())
-.then(res => {
+const viejos = document.querySelectorAll('script.auth-script');
+viejos.forEach(s => s.remove());
+
+const script = document.createElement("script");
+script.className = "auth-script";
+const callbackName = "auth_" + Date.now(); 
+
+window[callbackName] = function(res) {
 estadoBotonesAuth(false);
+script.remove();
+delete window[callbackName];
+
 if (!res || res.status !== "success") {
 statusEl.style.color = "#ef4444";
-statusEl.innerText = res ? res.mensaje : "Error de respuesta del servidor.";
+statusEl.innerText = (res && res.mensaje) ? res.mensaje : "Error de respuesta del servidor.";
 return;
 }
 
@@ -1012,7 +1016,7 @@ localStorage.setItem(`peso_${usuarioActual}_${id}`, res.pesos[id]);
 }
 }
 
-if (res.rutina) {
+if (res.rutina && res.rutina !== "") {
 try {
 rutinaData = JSON.parse(res.rutina);
 localStorage.setItem(`rutina_${usuarioActual}`, res.rutina);
@@ -1020,18 +1024,23 @@ localStorage.setItem(`rutina_${usuarioActual}`, res.rutina);
 rutinaData = cargarRutinaLocal();
 }
 } else {
-// Si es usuario nuevo sin rutina guardada en la nube, arranca vacío
 rutinaData = { dia1: [], dia2: [], dia3: [] };
 }
 
-diaActivoActual = Object.keys(rutinaData)[0];
+diaActivoActual = Object.keys(rutinaData)[0] || "dia1";
 renderizarEstructuraDias();
-})
-.catch(err => {
+};
+
+script.src = `${GOOGLE_SCRIPT_URL}?accion=${accion}&usuario=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&callback=${callbackName}`;
+
+script.onerror = () => {
 estadoBotonesAuth(false);
 statusEl.style.color = "#ef4444";
 statusEl.innerText = "Error de red al conectar con Google Sheets.";
-});
+script.remove();
+};
+
+document.body.appendChild(script);
 }
 
 function abrirModalSiNoHayUsuario() {
@@ -1057,9 +1066,17 @@ document.getElementById("modal-usuario").style.display = "flex";
 function sincronizarDatosNube() {
 if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI") || !usuarioActual) return;
 
-fetch(`${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}`)
-.then(response => response.json())
-.then(datosRemotos => {
+const viejos = document.querySelectorAll('script.sync-script');
+viejos.forEach(s => s.remove());
+
+const script = document.createElement("script");
+script.className = "sync-script";
+const callbackName = "sync_" + Date.now();
+
+window[callbackName] = function(datosRemotos) {
+script.remove();
+delete window[callbackName];
+
 if (!datosRemotos) return;
 const pesosRemotos = datosRemotos.pesos || datosRemotos;
 for (const id in pesosRemotos) {
@@ -1069,15 +1086,17 @@ localStorage.setItem(`peso_${usuarioActual}_${id}`, peso);
 document.querySelectorAll(`input[data-exid="${id}"]`).forEach(inp => inp.value = peso);
 }
 
-if (datosRemotos.rutina) {
+if (datosRemotos.rutina && datosRemotos.rutina !== "") {
 try {
 rutinaData = JSON.parse(datosRemotos.rutina);
 localStorage.setItem(`rutina_${usuarioActual}`, datosRemotos.rutina);
 renderizarEstructuraDias();
 } catch (e) {}
 }
-})
-.catch(err => {});
+};
+
+script.src = `${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}&callback=${callbackName}`;
+document.body.appendChild(script);
 }
 
 function guardarPeso(id, valor) {
@@ -1149,7 +1168,7 @@ statusEl.style.color = "#10b981";
 statusEl.innerText = `✓ ¡Excelente ${usuarioActual}! Guardado en Drive (${diaSemana} ${fecha}).`;
 }).catch(() => {
 statusEl.style.color = "#ef4444";
-statusEl.innerText = "Error al conectar with Drive.";
+statusEl.innerText = "Error al conectar con Drive.";
 });
 }
 
