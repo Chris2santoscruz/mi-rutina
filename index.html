@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mi Rutina v3.1</title>
+<title>Mi Rutina v3.2</title>
 <style>
 :root {
 --bg-main: #0b1120;
@@ -582,6 +582,7 @@ margin-bottom: 12px;
 </div>
 
 <script>
+// PEGA AQUÍ TU NUEVA URL DE GOOGLE APPS SCRIPT:
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwSmi4qPcFaA2yKvK8AMq6PrhxvgfdTEg1y8RLotrR4QlhMWj9f_8cRFpqygs4OhUP/exec";
 
 const IMAGENES_MUSCULO = {
@@ -903,15 +904,28 @@ document.getElementById("btn-login").disabled = deshabilitar;
 document.getElementById("btn-reg").disabled = deshabilitar;
 }
 
-window.respuestaAuth = function(res) {
-estadoBotonesAuth(false);
+function procesarAcceso(accion) {
+const user = document.getElementById("input-user").value.toLowerCase().trim();
+const pass = document.getElementById("input-pass").value.trim();
 const statusEl = document.getElementById("login-status");
 
-if (!res || res.status !== "success") {
-if (statusEl) {
-statusEl.style.color = "#ef4444";
-statusEl.innerText = (res && res.mensaje) ? res.mensaje : "⚠️ Actualiza la URL de la Nueva Implementación en Apps Script.";
+if (!user || !pass) {
+statusEl.style.color = "#fbbf24";
+statusEl.innerText = "Ingresa usuario y contraseña.";
+return;
 }
+
+estadoBotonesAuth(true);
+statusEl.style.color = "#38bdf8";
+statusEl.innerText = accion === 'registro' ? "Registrando en Google Sheets..." : "Verificando usuario y clave...";
+
+fetch(`${GOOGLE_SCRIPT_URL}?accion=${accion}&usuario=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`)
+.then(response => response.json())
+.then(res => {
+estadoBotonesAuth(false);
+if (!res || res.status !== "success") {
+statusEl.style.color = "#ef4444";
+statusEl.innerText = res ? res.mensaje : "Error de respuesta del servidor.";
 return;
 }
 
@@ -921,7 +935,7 @@ localStorage.setItem("gym_usuario", usuarioActual);
 document.getElementById("nombre-usuario-display").innerText = usuarioActual;
 document.getElementById("btn-logout").style.display = "inline-block";
 document.getElementById("modal-usuario").style.display = "none";
-if (statusEl) statusEl.innerText = "";
+statusEl.innerText = "";
 
 if (res.pesos) {
 for (const id in res.pesos) {
@@ -941,33 +955,12 @@ rutinaData = cargarRutinaLocal();
 }
 
 renderizarTarjetas();
-};
-
-function procesarAcceso(accion) {
-const user = document.getElementById("input-user").value.toLowerCase().trim();
-const pass = document.getElementById("input-pass").value.trim();
-const statusEl = document.getElementById("login-status");
-
-if (!user || !pass) {
-statusEl.style.color = "#fbbf24";
-statusEl.innerText = "Ingresa usuario y contraseña.";
-return;
-}
-
-estadoBotonesAuth(true);
-statusEl.style.color = "#38bdf8";
-statusEl.innerText = accion === 'registro' ? "Registrando en Google Sheets..." : "Verificando usuario y clave...";
-
-const script = document.createElement("script");
-script.src = `${GOOGLE_SCRIPT_URL}?accion=${accion}&usuario=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&callback=respuestaAuth&t=${new Date().getTime()}`;
-script.onload = () => script.remove();
-script.onerror = () => {
+})
+.catch(err => {
 estadoBotonesAuth(false);
 statusEl.style.color = "#ef4444";
-statusEl.innerText = "Error al conectar con Google Sheets.";
-script.remove();
-};
-document.body.appendChild(script);
+statusEl.innerText = "Error de red al conectar con Google Sheets.";
+});
 }
 
 function abrirModalSiNoHayUsuario() {
@@ -989,9 +982,13 @@ renderizarTarjetas();
 document.getElementById("modal-usuario").style.display = "flex";
 }
 
-window.recibirDatosDesdeNube = function(datosRemotos) {
-if (!usuarioActual || !datosRemotos) return;
+function sincronizarDatosNube() {
+if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI") || !usuarioActual) return;
 
+fetch(`${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}`)
+.then(response => response.json())
+.then(datosRemotos => {
+if (!datosRemotos) return;
 const pesosRemotos = datosRemotos.pesos || datosRemotos;
 for (const id in pesosRemotos) {
 if (id === "pesos" || id === "rutina") continue;
@@ -1007,15 +1004,8 @@ localStorage.setItem(`rutina_${usuarioActual}`, datosRemotos.rutina);
 renderizarTarjetas();
 } catch (e) {}
 }
-};
-
-function sincronizarDatosNube() {
-if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PEGA_AQUI") || !usuarioActual) return;
-
-const script = document.createElement("script");
-script.src = `${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}&callback=recibirDatosDesdeNube&t=${new Date().getTime()}`;
-script.onload = () => script.remove();
-document.body.appendChild(script);
+})
+.catch(err => {});
 }
 
 function guardarPeso(id, valor) {
