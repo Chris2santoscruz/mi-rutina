@@ -70,6 +70,7 @@ header h1 {
   border-radius: 20px;
   font-size: 0.82rem;
   font-weight: 700;
+  cursor: pointer;
 }
 .btn-logout {
   background: rgba(239, 68, 68, 0.15);
@@ -318,6 +319,10 @@ header h1 {
   font-weight: 700;
   cursor: pointer;
 }
+.modal-box button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .btn-secondary {
   background: transparent !important;
   color: var(--text-muted) !important;
@@ -337,7 +342,9 @@ header h1 {
   <div class="header-content">
     <h1>MI ENTRENAMIENTO</h1>
     <div class="user-info-container">
-      <div class="user-badge">👤 <span id="nombre-usuario-display">Ingresar</span></div>
+      <div class="user-badge" onclick="abrirModalSiNoHayUsuario()">
+        👤 <span id="nombre-usuario-display">Ingresar</span>
+      </div>
       <button id="btn-logout" class="btn-logout" onclick="cerrarSesion()" style="display: none;">Salir</button>
     </div>
   </div>
@@ -355,7 +362,7 @@ header h1 {
 
     <div class="input-group">
       <label>Contraseña:</label>
-      <input type="password" id="input-pass" placeholder="••••••••" autocomplete="off">
+      <input type="password" id="input-pass" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter') procesarAcceso('login')">
     </div>
 
     <button id="btn-login" onclick="procesarAcceso('login')">Iniciar Sesión</button>
@@ -457,6 +464,7 @@ function inicializarApp() {
   const btnLogout = document.getElementById("btn-logout");
 
   if (!usuarioActual) {
+    if (display) display.innerText = "Ingresar";
     if (modal) modal.style.display = "flex";
     if (btnLogout) btnLogout.style.display = "none";
   } else {
@@ -508,7 +516,13 @@ function renderizarTarjetas() {
   }
 }
 
+function estadoBotonesAuth(deshabilitar) {
+  document.getElementById("btn-login").disabled = deshabilitar;
+  document.getElementById("btn-reg").disabled = deshabilitar;
+}
+
 window.respuestaAuth = function(res) {
+  estadoBotonesAuth(false);
   const statusEl = document.getElementById("login-status");
   if (!res || res.status === "error") {
     if (statusEl) {
@@ -532,7 +546,6 @@ window.respuestaAuth = function(res) {
     }
   }
   renderizarTarjetas();
-  sincronizarPesosNube();
 };
 
 function procesarAcceso(accion) {
@@ -546,21 +559,37 @@ function procesarAcceso(accion) {
     return;
   }
 
+  estadoBotonesAuth(true);
   statusEl.style.color = "#38bdf8";
   statusEl.innerText = accion === 'registro' ? "Registrando usuario..." : "Verificando acceso...";
 
   const script = document.createElement("script");
   script.src = `${GOOGLE_SCRIPT_URL}?accion=${accion}&usuario=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&callback=respuestaAuth&t=${new Date().getTime()}`;
+  script.onload = () => script.remove();
+  script.onerror = () => {
+    estadoBotonesAuth(false);
+    statusEl.style.color = "#ef4444";
+    statusEl.innerText = "Error de red al conectar con el servidor.";
+    script.remove();
+  };
   document.body.appendChild(script);
+}
+
+function abrirModalSiNoHayUsuario() {
+  if (!usuarioActual) {
+    document.getElementById("modal-usuario").style.display = "flex";
+  }
 }
 
 function cerrarSesion() {
   localStorage.removeItem("gym_usuario");
   usuarioActual = "";
+  document.getElementById("nombre-usuario-display").innerText = "Ingresar";
   document.getElementById("input-user").value = "";
   document.getElementById("input-pass").value = "";
   document.getElementById("login-status").innerText = "";
   document.getElementById("btn-logout").style.display = "none";
+  renderizarTarjetas();
   document.getElementById("modal-usuario").style.display = "flex";
 }
 
@@ -580,6 +609,7 @@ function sincronizarPesosNube() {
 
   const script = document.createElement("script");
   script.src = `${GOOGLE_SCRIPT_URL}?usuario=${encodeURIComponent(usuarioActual)}&callback=recibirPesosDesdeNube&t=${new Date().getTime()}`;
+  script.onload = () => script.remove();
   document.body.appendChild(script);
 }
 
