@@ -330,9 +330,11 @@ header h1 {
   margin-top: 8px !important;
 }
 .login-msg {
-  margin-top: 10px;
-  font-size: 0.82rem;
-  min-height: 18px;
+  margin-top: 12px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  min-height: 20px;
+  line-height: 1.35;
 }
 </style>
 </head>
@@ -357,7 +359,7 @@ header h1 {
     
     <div class="input-group">
       <label>Usuario:</label>
-      <input type="text" id="input-user" placeholder="Ej: christian_fit" autocomplete="off">
+      <input type="text" id="input-user" placeholder="Ej: christian" autocomplete="off">
     </div>
 
     <div class="input-group">
@@ -419,6 +421,7 @@ header h1 {
 </div>
 
 <script>
+// IMPORTANTE: PEGA AQUÍ LA NUEVA URL QUE TE DIO EL PASO 1:
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwSmi4qPcFaA2yKvK8AMq6PrhxvgfdTEg1y8RLotrR4QlhMWj9f_8cRFpqygs4OhUP/exec";
 
 const rutinaData = {
@@ -524,15 +527,21 @@ function estadoBotonesAuth(deshabilitar) {
 window.respuestaAuth = function(res) {
   estadoBotonesAuth(false);
   const statusEl = document.getElementById("login-status");
-  if (!res || res.status === "error") {
+
+  // Validación estricta: solo entra si la planilla devuelve explícitamente status === "success"
+  if (!res || res.status !== "success") {
     if (statusEl) {
       statusEl.style.color = "#ef4444";
-      statusEl.innerText = res ? res.mensaje : "Error de conexión.";
+      if (res && res.mensaje) {
+        statusEl.innerText = res.mensaje;
+      } else {
+        statusEl.innerText = "⚠️ Tu Google Apps Script sigue en la versión anterior. Crea una 'Nueva implementación' en Apps Script y pega la nueva URL.";
+      }
     }
     return;
   }
 
-  usuarioActual = res.usuario || document.getElementById("input-user").value.toLowerCase().trim();
+  usuarioActual = res.usuario;
   localStorage.setItem("gym_usuario", usuarioActual);
 
   document.getElementById("nombre-usuario-display").innerText = usuarioActual;
@@ -561,7 +570,7 @@ function procesarAcceso(accion) {
 
   estadoBotonesAuth(true);
   statusEl.style.color = "#38bdf8";
-  statusEl.innerText = accion === 'registro' ? "Registrando usuario..." : "Verificando acceso...";
+  statusEl.innerText = accion === 'registro' ? "Registrando en Google Sheets..." : "Verificando usuario y clave...";
 
   const script = document.createElement("script");
   script.src = `${GOOGLE_SCRIPT_URL}?accion=${accion}&usuario=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&callback=respuestaAuth&t=${new Date().getTime()}`;
@@ -569,7 +578,7 @@ function procesarAcceso(accion) {
   script.onerror = () => {
     estadoBotonesAuth(false);
     statusEl.style.color = "#ef4444";
-    statusEl.innerText = "Error de red al conectar con el servidor.";
+    statusEl.innerText = "Error de red al conectar con Google Sheets.";
     script.remove();
   };
   document.body.appendChild(script);
