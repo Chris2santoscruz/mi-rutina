@@ -577,6 +577,7 @@ line-height: 1.5;
 </div>
 
 <script>
+// AQUÍ ESTÁ TU NUEVA URL YA COLOCADA
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8tkn6T_TGrC7IFxfSx0mGKaJtyXhVbNh_JhCjArZl33RxDg8EkOJQe2C9GPsGsTHT/exec";
 
 const IMAGENES_MUSCULO = {
@@ -594,6 +595,41 @@ const IMAGENES_MUSCULO = {
 "Abdomen": "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=200",
 "Core": "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=200",
 "Trapecio": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200"
+};
+
+const RUTINA_POR_DEFECTO = {
+dia1: [
+{ id: "p_plano", musculo: "Pecho", nombre: "Press Pecho Plano", series: "3-4 series x 8-10 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=press+de+banca+plano+mancuernas+tecnica" },
+{ id: "p_inclinado", musculo: "Pecho", nombre: "Press Inclinado Mancuernas", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200", video: "https://www.youtube.com/results?search_query=press+inclinado+con+mancuernas+tecnica" },
+{ id: "voador", musculo: "Pecho", nombre: "Voador Direto (Máquina)", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=peck+deck+machine+fly+tecnica" },
+{ id: "press_militar", musculo: "Hombro", nombre: "Press Militar Sentado", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=press+militar+mancuernas+sentado" },
+{ id: "elev_lat", musculo: "Hombro", nombre: "Elevaciones Laterales", series: "3-4 series x 12-15 reps", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200", video: "https://www.youtube.com/results?search_query=elevaciones+laterales+mancuerna+tecnica" },
+{ id: "elev_front", musculo: "Hombro", nombre: "Elevaciones Frontales", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200", video: "https://www.youtube.com/results?search_query=elevaciones+frontales+mancuerna" },
+{ id: "shrugs", musculo: "Trapecio", nombre: "Encogimientos (Shrugs)", series: "3-4 series x 12-15 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=encogimiento+de+hombros+mancuernas+shrugs" },
+{ id: "biceps_w", musculo: "Bíceps", nombre: "Curl Barra W", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=curl+biceps+barra+w+tecnica" },
+{ id: "martelo", musculo: "Bíceps", nombre: "Rosca Martillo", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=curl+martillo+mancuernas" },
+{ id: "plancha", musculo: "Core", nombre: "Plancha Frontal", series: "3-4 series x 30-45s", img: "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=200", video: "https://www.youtube.com/results?search_query=plancha+abdominal+tecnica" }
+],
+dia2: [
+{ id: "goblet", musculo: "Pierna", nombre: "Goblet Squat (Globo)", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200", video: "https://www.youtube.com/results?search_query=goblet+squat+tecnica" },
+{ id: "prensa", musculo: "Pierna", nombre: "Prensa Horizontal", series: "3-4 series x 10-12 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=prensa+horizontal+piernas" },
+{ id: "extensora", musculo: "Cuádriceps", nombre: "Cadeira Extensora", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=sillon+cuadriceps+extensora" },
+{ id: "flexora", musculo: "Isquios", nombre: "Cadeira Flexora", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=camilla+femoral+flexora" },
+{ id: "adutora", musculo: "Aductores", nombre: "Cadeira Adutora", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=maquina+aductora" },
+{ id: "abdutora", musculo: "Abductores", nombre: "Cadeira Abdutora", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=maquina+abductora" },
+{ id: "pelvica", musculo: "Glúteo", nombre: "Elevação Pélvica", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=200", video: "https://www.youtube.com/results?search_query=puente+de+gluteo+suelo" },
+{ id: "panto_prensa", musculo: "Gemelos", nombre: "Pantorrilla en Prensa", series: "3-4 series x 15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=pantorrilla+en+prensa" },
+{ id: "abd_reto", musculo: "Abdomen", nombre: "Abdominal Reto", series: "4 series x 15 reps", img: "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=200", video: "https://www.youtube.com/results?search_query=crunch+abdominal+suelo" }
+],
+dia3: [
+{ id: "puxada", musculo: "Espalda", nombre: "Puxada Anatômica", series: "3-4 series x 10-12 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=jalon+al+pecho+polea+tecnica" },
+{ id: "serrote", musculo: "Espalda", nombre: "Serrote Mancuerna", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=remo+con+mancuerna+serrote" },
+{ id: "remo_sentado", musculo: "Espalda", nombre: "Remo Barra Anatómica", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=remo+sentado+en+polea+baja" },
+{ id: "pullover_polea", musculo: "Espalda", nombre: "Pullover Polea Alta", series: "3 series x 12-15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=pullover+en+polea+alta+dorsal" },
+{ id: "crucifijo_inv", musculo: "Deltoides Post", nombre: "Crucifijo Inverso", series: "3 series x 15 reps", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200", video: "https://www.youtube.com/results?search_query=pajaros+con+mancuernas+deltoides+posterior" },
+{ id: "triceps_corda", musculo: "Tríceps", nombre: "Tríceps Corda Polea", series: "3-4 series x 12-15 reps", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200", video: "https://www.youtube.com/results?search_query=extension+triceps+cuerda+polea" },
+{ id: "triceps_frances", musculo: "Tríceps", nombre: "Tríceps Francés", series: "3 series x 10-12 reps", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200", video: "https://www.youtube.com/results?search_query=press+frances+triceps+mancuerna" }
+]
 };
 
 const BANCO_EJERCICIOS = [
@@ -927,8 +963,8 @@ id: base.id + "_" + Date.now(),
 musculo: base.musculo,
 nombre: base.nombre,
 series: seriesElegidas,
-img: IMAGENES_MUSCULO[base.musculo] || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200",
-video: `https://www.youtube.com/results?search_query=${encodeURIComponent(base.nombre + " tecnica")}`
+img: base.img || IMAGENES_MUSCULO[base.musculo] || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200",
+video: base.video || `https://www.youtube.com/results?search_query=${encodeURIComponent(base.nombre + " tecnica")}`
 };
 
 rutinaData[diaActivoParaAgregar].push(nuevoEx);
